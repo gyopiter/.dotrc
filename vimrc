@@ -302,12 +302,15 @@ set fileencodings=utf-8
 set number
 set ruler
 set showbreak=↪
-set termguicolors
 set virtualedit=onemore
 set whichwrap=b,s,h,l,<,>,[,]
 
 autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM textwidth=80
 autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80
+
+if has("win32")
+    set termguicolors
+endif
 
 colorscheme iceberg
 
