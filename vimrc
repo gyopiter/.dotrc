@@ -35,9 +35,7 @@
 
     " User Set Plugin
     Plugin 'davidhalter/jedi-vim'
-    Plugin 'justmao945/vim-clang'
     Plugin 'cohama/lexima.vim'
-    Plugin 'dense-analysis/ale'
     Plugin 'vim-airline/vim-airline'
     Plugin 'cocopon/iceberg.vim'
     Plugin 'arcticicestudio/nord-vim'
@@ -115,6 +113,11 @@
 "------ BEGIN deoplete ------
     let g:deoplete#enable_at_startup = 1
 "------ END deoplete ------
+
+
+"------ BEGIN vim-lsp ------
+    let g:lsp_diagnostics_echo_cursor = 1
+"------ END vim-lsp ------
 
 
 "------ BEGIN vim-vsnip ------
@@ -309,6 +312,11 @@ autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM tex
 autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80
 
 if has("win32")
+    set shell=powershell
+    set shellcmdflag=-Command
+    set shellquote=\"
+    set shellxquote=
+    set shellslash!
     set termguicolors
 endif
 
