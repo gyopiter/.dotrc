@@ -35,7 +35,6 @@
 
     " User Set Plugin
     Plugin 'davidhalter/jedi-vim'
-    Plugin 'cohama/lexima.vim'
     Plugin 'vim-airline/vim-airline'
     Plugin 'cocopon/iceberg.vim'
     Plugin 'arcticicestudio/nord-vim'
@@ -283,6 +282,16 @@ inoremap <C-j> <Down>
 inoremap <C-k> <Up>
 inoremap <C-h> <Left>
 inoremap <C-l> <Right>
+
+
+inoremap { {}<LEFT>
+inoremap {<Enter> {}<Left><CR><ESC><S-o>
+inoremap [ []<LEFT>
+inoremap ( ()<LEFT>
+inoremap (<Enter> ()<Left><CR><ESC><S-o>
+inoremap " ""<LEFT>
+inoremap ' ''<LEFT>
+
 
 nnoremap あ a
 nnoremap い i
