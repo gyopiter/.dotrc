@@ -55,6 +55,7 @@
     Plugin 'preservim/vim-markdown'
     Plugin 'iamcco/markdown-preview.nvim'
     Plugin 'embear/vim-localvimrc'
+    Plugin 'jiangmiao/auto-pairs'
 
     Plugin 'Shougo/deoplete.nvim'
     if !has('nvim')
@@ -284,13 +285,13 @@ inoremap <C-h> <Left>
 inoremap <C-l> <Right>
 
 
-inoremap { {}<LEFT>
-inoremap {<Enter> {}<Left><CR><ESC><S-o>
-inoremap [ []<LEFT>
-inoremap ( ()<LEFT>
-inoremap (<Enter> ()<Left><CR><ESC><S-o>
-inoremap " ""<LEFT>
-inoremap ' ''<LEFT>
+"inoremap { {}<LEFT>
+"inoremap {<Enter> {}<Left><CR><ESC><S-o>
+"inoremap [ []<LEFT>
+"inoremap ( ()<LEFT>
+"inoremap (<Enter> ()<Left><CR><ESC><S-o>
+"inoremap " ""<LEFT>
+"inoremap ' ''<LEFT>
 
 
 nnoremap あ a
@@ -321,11 +322,6 @@ autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM tex
 autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80
 
 if has("win32")
-    set shell=powershell
-    set shellcmdflag=-Command
-    set shellquote=\"
-    set shellxquote=
-    set shellslash!
     set termguicolors
 endif
 
