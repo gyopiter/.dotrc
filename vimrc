@@ -318,8 +318,8 @@ set showbreak=↪
 set virtualedit=onemore
 set whichwrap=b,s,h,l,<,>,[,]
 
-autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM textwidth=80
-autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80
+autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
+autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
 
 if has("win32")
     set termguicolors
