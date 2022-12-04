@@ -5,10 +5,16 @@ function pdfcomp() {
   -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$2 $1
 }
 
+# run ps2pdf to all ps files in current and child directories
 function allps2pdf() {
   find . -name '*.ps' | sed 's/.ps//' | xargs -I {} ps2pdf {}.ps {}.pdf
 }
 
+# run pdfseparate to all pdf files in current and child directories
 function allpdfseparate() {
   find . -name '*.pdf' -and -not -name '*_separated.pdf' | sed 's/.pdf//' | xargs -I {} pdfseparate {}.pdf {}_%d_separated.pdf
 }
+
+# set history size 
+HISTSIZE=20000
+HISTFILESIZE=20000
