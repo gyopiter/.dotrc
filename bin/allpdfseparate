@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# run pdfseparate to all pdf files in current and child directories
+find . -name '*.pdf' -and -not -name '*_separated.pdf' | sed 's/.pdf//' | xargs -I {} pdfseparate {}.pdf {}_%d_separated.pdf

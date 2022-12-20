@@ -1,19 +1,5 @@
-
-# cf. https://askubuntu.com/questions/113544/how-can-i-reduce-the-file-size-of-a-scanned-pdf-file
-function pdfcomp() {
-  gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer \
-  -dNOPAUSE -dQUIET -dBATCH -sOutputFile=$2 $1
-}
-
-# run ps2pdf to all ps files in current and child directories
-function allps2pdf() {
-  find . -name '*.ps' | sed 's/.ps//' | xargs -I {} ps2pdf {}.ps {}.pdf
-}
-
-# run pdfseparate to all pdf files in current and child directories
-function allpdfseparate() {
-  find . -name '*.pdf' -and -not -name '*_separated.pdf' | sed 's/.pdf//' | xargs -I {} pdfseparate {}.pdf {}_%d_separated.pdf
-}
+# add ./bin (relevant) to the path
+export PATH=$PATH:$(cd "$(dirname "$0")"; pwd)/bin
 
 # set history size
 HISTSIZE=20000

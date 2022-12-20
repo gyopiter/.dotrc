@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# run ps2pdf to all ps files in current and child directories
+find . -name '*.ps' | sed 's/.ps//' | xargs -I {} ps2pdf {}.ps {}.pdf
