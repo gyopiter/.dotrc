@@ -2,5 +2,5 @@
 
 # convert 1 page pdf to a 2x4 page per sheet pdf
 pdfjam --nup 2x4 --paper a4paper --no-landscape\
-    --frame true --delta '2mm 2mm' --scale 0.98\
+    --frame true --delta '4mm 4mm' --scale 0.95\
     $1 --outfile $2
