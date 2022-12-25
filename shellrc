@@ -1,5 +1,5 @@
-# add ./bin (relevant) to the path
-export PATH=$PATH:$(cd "$(dirname "$0")"; pwd)/bin
+# add .dotrc/bin to the path
+export PATH=$PATH:"$(dirname ${BASH_SOURCE[0]})/bin"
 
 # set history size
 HISTSIZE=20000
