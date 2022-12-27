@@ -273,11 +273,14 @@
 
 syntax enable
 
+
 nnoremap <Down> gj
 nnoremap <Up>   gk 
 
+
 nnoremap j gj
 nnoremap k gk
+
 
 inoremap <C-j> <Down>
 inoremap <C-k> <Up>
@@ -294,16 +297,10 @@ inoremap <C-l> <Right>
 "inoremap ' ''<LEFT>
 
 
-nnoremap あ a
-nnoremap い i
-nnoremap う u
-nnoremap お o
-nnoremap っd dd
-nnoremap っy yy
-
 nnoremap <silent><C-k>e :NERDTreeToggle<CR>
 nnoremap <silent><C-k>b :QuickRun <in.txt<CR>
 nnoremap <silent><C-k>r :QuickRun <CR>
+
 
 set background=dark
 set backspace=indent,eol,start
@@ -318,12 +315,20 @@ set showbreak=↪
 set virtualedit=onemore
 set whichwrap=b,s,h,l,<,>,[,]
 
+
+" IME configuration
+inoremap <silent> <ESC> <ESC>:set iminsert=2<CR>
+set iminsert=2
+set imsearch=0
+
+
 autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
 autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
+
 
 if has("win32")
     set termguicolors
 endif
 
-colorscheme iceberg
 
+colorscheme iceberg
