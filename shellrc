@@ -1,6 +1,11 @@
-# add .dotrc/bin to the path
-export PATH=$PATH:"$(dirname ${BASH_SOURCE[0]})/bin"
-
+# if shell is bash
+if [ -n "$BASH_VERSION" ]; then
+    BINPATH="$(dirname ${BASH_SOURCE[0]})/bin"
+# if shell is zsh
+elif [ -n "$ZSH_VERSION" ]; then
+    BINPATH="${(%):-%N}/bin"
+fi
+export PATH=$PATH:$BINPATH
 # set history size
 HISTSIZE=20000
 HISTFILESIZE=20000
