@@ -90,7 +90,7 @@
 
 
 "------ BEGIN vim-session ------
-    " 現在のディレクトリ直下の .vimsessions/ を取得 
+    " 現在のディレクトリ直下の .vimsessions/ を取得
     let s:local_session_directory = xolox#misc#path#merge(getcwd(), '.vimsessions')
     " 存在すれば
     if isdirectory(s:local_session_directory)
@@ -265,7 +265,7 @@
 
 
 "------ BEGIN vim-localvimrc ------
-   "let g:localvimrc_ask=0  
+   "let g:localvimrc_ask=0
     let g:localvimrc_persistent=2
     let g:localvimrc_persistent=1
 "------ END vim-localvimrc ------
@@ -275,17 +275,21 @@ syntax enable
 
 
 nnoremap <Down> gj
-nnoremap <Up>   gk 
+nnoremap <Up>   gk
 
 
 nnoremap j gj
 nnoremap k gk
 
 
-inoremap <C-j> <Down>
-inoremap <C-k> <Up>
+inoremap <C-j> <C-o>gj
+inoremap <C-k> <C-o>gk
 inoremap <C-h> <Left>
 inoremap <C-l> <Right>
+
+
+vnoremap j gj
+vnoremap k gk
 
 
 "inoremap { {}<LEFT>
