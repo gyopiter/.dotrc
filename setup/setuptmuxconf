@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# Check if tmux.conf contains the line 'source-file ~/.dotrc/tmux.conf'
+if [ [ -f ~/.tmux.conf ] && [ $(grep -c "source-file ~/.dotrc/tmux.conf" ~/.tmux.conf) -gt 0 ] ]; then
+    echo "tmux.conf already sourced in ~/.tmux.conf"
+else
+    echo "source-file ~/.dotrc/tmux.conf" | tee -a ~/.tmux.conf
+fi
