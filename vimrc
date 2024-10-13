@@ -127,7 +127,7 @@ let g:lsp_diagnostics_echo_cursor = 1
 imap <expr> <C-y>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-y>'
 smap <expr> <C-y>   vsnip#expandable()  ? '<Plug>(vsnip-expand)'         : '<C-y>'
 
-    Expand or jump
+" Expand or jump
 imap <expr> <C-i>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-i>'
 smap <expr> <C-i>   vsnip#available(1)  ? '<Plug>(vsnip-expand-or-jump)' : '<C-i>'
 
