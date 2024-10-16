@@ -11,5 +11,5 @@ fi
 if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/zshrc" ~/.zshrc) -gt 0 ]; then
     echo "zshrc already sourced in ~/.zshrc"
 else
-    echo "source ~/.dotrc/zshrc" | tee -a ~/.zshrc
+    echo "source ~/.dotrc/shellrc" | tee -a ~/.zshrc
 fi
