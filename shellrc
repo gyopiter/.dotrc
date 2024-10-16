@@ -1,16 +1,20 @@
-# if shell is bash
+# Add bin directory to PATH
 if [ -n "$BASH_VERSION" ]; then
+    # if shell is bash
     BINPATH="$(dirname ${BASH_SOURCE[0]})/bin"
-# if shell is zsh
 elif [ -n "$ZSH_VERSION" ]; then
+    # if shell is zsh
     BINPATH="$(dirname ${(%):-%N})/bin"
 fi
 export PATH=$PATH:$BINPATH
+
+
 # set history size
 HISTSIZE=20000
 HISTFILESIZE=20000
 
-# run source shellrc
+
+# Define rc reload function
 function srcrc() {
     # if shell is bash
     if [ -n "$BASH_VERSION" ]; then
@@ -20,3 +24,10 @@ function srcrc() {
         source ~/.zshrc
     fi
 }
+
+# Oh My Zsh configuration
+if [[ $ZSH == *".oh-my-zsh" ]]; then
+    ZSH_THEME="re5et"
+    plugins=(git)
+    source $ZSH/oh-my-zsh.sh
+fi

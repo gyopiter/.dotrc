@@ -1,4 +1,15 @@
 #! /bin/bash
 
 # Install Oh My Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+if [ -d ~/.oh-my-zsh ]; then
+    echo "Oh My Zsh already installed"
+else
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+# Import the zshrc
+if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/zshrc" ~/.zshrc) -gt 0 ]; then
+    echo "zshrc already sourced in ~/.zshrc"
+else
+    echo "source ~/.dotrc/zshrc" | tee -a ~/.zshrc
+fi
