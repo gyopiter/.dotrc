@@ -8,7 +8,7 @@ else
 fi
 
 # Import the zshrc
-if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/zshrc" ~/.zshrc) -gt 0 ]; then
+if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/shellrc" ~/.zshrc) -gt 0 ]; then
     echo "zshrc already sourced in ~/.zshrc"
 else
     echo "source ~/.dotrc/shellrc" | tee -a ~/.zshrc
