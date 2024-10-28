@@ -6,16 +6,18 @@ elif [ -n "$ZSH_VERSION" ]; then
     # if shell is zsh
     BINPATH="$(dirname ${(%):-%N})/bin"
 fi
-export PATH=$PATH:$BINPATH
+if [ -d "$BINPATH" ] && [ $(echo $PATH | grep -c $BINPATH) -eq 0 ]; then
+    export PATH=$PATH:$BINPATH
+fi
 
 
-# set history size
+# Set history size
 HISTSIZE=20000
 HISTFILESIZE=20000
 
 
 # Define rc reload function
-function srcrc() {
+function sourcerc() {
     # if shell is bash
     if [ -n "$BASH_VERSION" ]; then
         source ~/.bashrc
@@ -25,9 +27,16 @@ function srcrc() {
     fi
 }
 
+
 # Oh My Zsh configuration
 if [[ $ZSH == *".oh-my-zsh" ]]; then
     ZSH_THEME="re5et"
-    plugins=(git)
+    plugins=(
+        git
+        copypath
+        zsh-completions
+        zsh-autosuggestions
+        zsh-syntax-highlighting
+    )
     source $ZSH/oh-my-zsh.sh
 fi
