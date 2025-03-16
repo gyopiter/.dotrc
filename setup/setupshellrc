@@ -1,22 +1,47 @@
 #! /bin/bash
 
-# Install Oh My Zsh
-if [ -d ~/.oh-my-zsh ]; then
-    echo "Oh My Zsh already installed"
-else
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
+function install_ohmyzsh() {
+    # Install Oh My Zsh
+    if [ -d ~/.oh-my-zsh ]; then
+        echo "Oh My Zsh already installed"
+    else
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    fi
 
-# Install plugins
-if [ -d ~/.oh-my-zsh ]; then
-    git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-fi
+    # Install plugins
+    if [ -d ~/.oh-my-zsh ]; then
+        git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+        git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+    fi
 
-# Import the zshrc
-if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/shellrc" ~/.zshrc) -gt 0 ]; then
-    echo "zshrc already sourced in ~/.zshrc"
-else
-    echo "source ~/.dotrc/shellrc" | tee -a ~/.zshrc
-fi
+    # Import the zshrc
+    if [ -f ~/.zshrc ] && [ $(grep -c "source ~/.dotrc/shellrc" ~/.zshrc) -gt 0 ]; then
+        echo "zshrc already sourced in ~/.zshrc"
+    else
+        echo "source ~/.dotrc/shellrc" | tee -a ~/.zshrc
+    fi
+}
+
+function install_ohmybash() {
+    # Install Oh My Bash
+    if [ -d ~/.oh-my-bash ]; then
+        echo "Oh My Bash already installed"
+    else
+        bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
+    fi
+
+    # Import the bashrc
+    if [ -f ~/.bashrc ] && [ $(grep -c "source ~/.dotrc/shellrc" ~/.bashrc) -gt 0 ]; then
+        echo "bashrc already sourced in ~/.bashrc"
+    else
+        echo "source ~/.dotrc/shellrc" | tee -a ~/.bashrc
+    fi
+}
+
+function main() {
+    install_ohmyzsh
+    install_ohmybash
+}
+
+main

@@ -6,6 +6,7 @@ elif [ -n "$ZSH_VERSION" ]; then
     # if shell is zsh
     BINPATH="$(dirname ${(%):-%N})/bin"
 fi
+
 if [ -d "$BINPATH" ] && [ $(echo $PATH | grep -c $BINPATH) -eq 0 ]; then
     export PATH=$PATH:$BINPATH
 fi
@@ -27,9 +28,8 @@ function sourcerc() {
     fi
 }
 
-
 # Oh My Zsh configuration
-if [[ $ZSH == *".oh-my-zsh" ]]; then
+if [[ $ZSH == *".oh-my-zsh" ]] && [ -n "$ZSH_VERSION" ]; then
     ZSH_THEME="re5et"
     plugins=(
         git
@@ -39,4 +39,20 @@ if [[ $ZSH == *".oh-my-zsh" ]]; then
         zsh-syntax-highlighting
     )
     source $ZSH/oh-my-zsh.sh
+elif [[ $OSH == *".oh-my-bash" ]] && [ -n "$BASH_VERSION" ]; then
+    OSH_THEME="brainy"
+    OMB_USE_SUDO=true
+    compretions=(
+        git
+        composer
+        ssh
+    )
+    aliases=(
+        general
+    )
+    plugins=(
+        git
+        bashmarks
+    )
+    source "$OSH"/oh-my-bash.sh
 fi
