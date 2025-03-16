@@ -40,7 +40,11 @@ if [[ $ZSH == *".oh-my-zsh" ]] && [ -n "$ZSH_VERSION" ]; then
     )
     source $ZSH/oh-my-zsh.sh
 elif [[ $OSH == *".oh-my-bash" ]] && [ -n "$BASH_VERSION" ]; then
-    OSH_THEME="brainy"
+    case $- in
+        *i*) ;;
+        *) return;;
+    esac
+    OSH_THEME="font"
     OMB_USE_SUDO=true
     compretions=(
         git
