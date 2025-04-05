@@ -28,6 +28,17 @@ function sourcerc() {
     fi
 }
 
+
+# if $SSH_AUTH_SOCK is a socket, replace .ssh/auth.sock with a new symlink pointing to it
+[ -S "$SSH_AUTH_SOCK" ] && ln -snf "$SSH_AUTH_SOCK" ~/.ssh/auth.sock
+# if running in screen or tmux, set $SSH_AUTH_SOCK to the shared auth.sock location, regardless if there is an existing auth sock.
+case "$TERM" in
+    screen*|tmux*)
+        export SSH_AUTH_SOCK=~/.ssh/auth.sock
+        ;;
+esac
+
+
 # Oh My Zsh configuration
 if [[ $ZSH == *".oh-my-zsh" ]] && [ -n "$ZSH_VERSION" ]; then
     ZSH_THEME="re5et"
