@@ -178,6 +178,7 @@ set cursorline
 set expandtab
 set fileencodings=utf-8
 set number
+set mouse=a
 set ruler
 set showbreak=↪
 set virtualedit=onemore
