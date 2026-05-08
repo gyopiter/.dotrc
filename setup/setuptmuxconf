@@ -2,6 +2,8 @@
 
 set -e
 
+mkdir -p "$HOME/.tmux/plugins"
+
 if [ -d "$HOME/.tmux/plugins/tpm" ]; then
     echo "TPM already installed"
 else
