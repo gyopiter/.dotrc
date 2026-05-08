@@ -7,8 +7,11 @@ elif [ -n "$ZSH_VERSION" ]; then
     BINPATH="$(dirname ${(%):-%N})/bin"
 fi
 
-if [ -d "$BINPATH" ] && [ $(echo $PATH | grep -c $BINPATH) -eq 0 ]; then
-    export PATH=$BINPATH:$PATH
+if [ -d "$BINPATH" ]; then
+    case ":$PATH:" in
+        *":$BINPATH:"*) ;;
+        *) export PATH="$BINPATH:$PATH" ;;
+    esac
 fi
 
 
@@ -57,7 +60,7 @@ elif [[ $OSH == *".oh-my-bash" ]] && [ -n "$BASH_VERSION" ]; then
     esac
     OSH_THEME="font"
     OMB_USE_SUDO=true
-    compretions=(
+    completions=(
         git
         composer
         ssh
