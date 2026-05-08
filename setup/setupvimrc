@@ -1,19 +1,21 @@
 #! /bin/bash
 
+set -e
+
 # Import the vimrc
-if [ -f ~/.vimrc ] && [ $(grep -c "source ~/.dotrc/vimrc" ~/.vimrc) -gt 0 ]; then
+if [ -f ~/.vimrc ] && grep -qF "source ~/.dotrc/vimrc" ~/.vimrc; then
     echo "vimrc already sourced in ~/.vimrc"
 else
     echo "source ~/.dotrc/vimrc" | tee -a ~/.vimrc
 fi
 
 # Install Vundle
-if [ -d ~/.vim/bundle/Vundle.vim ]; then
+if [ -d "$HOME/.vim/bundle/Vundle.vim" ]; then
     echo "Vundle already installed"
 else
-    git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+    git clone https://github.com/VundleVim/Vundle.vim.git "$HOME/.vim/bundle/Vundle.vim"
 fi
 
-if [ -d ~/.vim/bundle/Vundle.vim ]; then
+if [ -d "$HOME/.vim/bundle/Vundle.vim" ]; then
     vim +PluginInstall +qall
 fi
