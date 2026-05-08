@@ -8,5 +8,12 @@ else
 fi
 
 # Install Vundle
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim && \
-vim +PluginInstall +qall
+if [ -d ~/.vim/bundle/Vundle.vim ]; then
+    echo "Vundle already installed"
+else
+    git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+fi
+
+if [ -d ~/.vim/bundle/Vundle.vim ]; then
+    vim +PluginInstall +qall
+fi
