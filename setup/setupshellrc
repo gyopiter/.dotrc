@@ -2,6 +2,22 @@
 
 set -e
 
+function install_fzf() {
+    if command -v fzf >/dev/null 2>&1; then
+        echo "fzf already installed"
+    elif command -v brew >/dev/null 2>&1; then
+        brew install fzf
+    else
+        if [ -d ~/.fzf ]; then
+            echo "fzf repository already installed"
+        else
+            git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
+        fi
+
+        ~/.fzf/install --bin --no-update-rc
+    fi
+}
+
 function install_ohmyzsh() {
     # Install Oh My Zsh
     if [ -d ~/.oh-my-zsh ]; then
@@ -19,6 +35,12 @@ function install_ohmyzsh() {
             echo "zsh-completions already installed"
         else
             git clone https://github.com/zsh-users/zsh-completions "$zsh_custom_dir/plugins/zsh-completions"
+        fi
+
+        if [ -d "$zsh_custom_dir/plugins/fzf-tab" ]; then
+            echo "fzf-tab already installed"
+        else
+            git clone https://github.com/Aloxaf/fzf-tab "$zsh_custom_dir/plugins/fzf-tab"
         fi
 
         if [ -d "$zsh_custom_dir/plugins/zsh-autosuggestions" ]; then
@@ -59,6 +81,7 @@ function install_ohmybash() {
 }
 
 function main() {
+    install_fzf
     install_ohmyzsh
     install_ohmybash
 }
