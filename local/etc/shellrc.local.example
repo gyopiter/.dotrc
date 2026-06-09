@@ -1,0 +1,6 @@
+# Local shell overrides for this machine.
+# Copy this file to local/etc/shellrc.local and customize as needed.
+
+# Example:
+# export FOO="bar"
+# export PATH="$HOME/.local/bin:$PATH"

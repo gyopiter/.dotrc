@@ -86,3 +86,25 @@ elif [[ $OSH == *".oh-my-bash" ]] && [ -n "$BASH_VERSION" ]; then
     )
     source "$OSH"/oh-my-bash.sh
 fi
+
+# Load local dotrc extensions.
+if [ -n "$BASH_VERSION" ]; then
+    DOTRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [ -n "$ZSH_VERSION" ]; then
+    DOTRC_DIR="$(cd "$(dirname "${(%):-%N}")" && pwd)"
+fi
+
+LOCALBINPATH="$DOTRC_DIR/local/bin"
+if [ -d "$LOCALBINPATH" ]; then
+    case ":$PATH:" in
+        *":$LOCALBINPATH:"*) ;;
+        *) export PATH="$LOCALBINPATH:$PATH" ;;
+    esac
+fi
+
+if [ -f "$DOTRC_DIR/local/etc/shellrc.local" ]; then
+    . "$DOTRC_DIR/local/etc/shellrc.local"
+fi
+
+unset LOCALBINPATH
+unset DOTRC_DIR
