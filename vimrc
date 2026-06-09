@@ -47,7 +47,6 @@ Plugin 'xolox/vim-misc'
 Plugin 'hrsh7th/vim-vsnip'
 Plugin 'hrsh7th/vim-vsnip-integ'
 Plugin 'godlygeek/tabular'
-Plugin 'preservim/vim-markdown'
 Plugin 'embear/vim-localvimrc'
 Plugin 'jiangmiao/auto-pairs'
 
@@ -191,12 +190,15 @@ set iminsert=2
 set imsearch=0
 
 
-autocmd BufRead,BufNewFile *.txt set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
-autocmd BufRead,BufNewFile *.md  set spell spelllang=en_us formatoptions+=mM textwidth=80 nospell
+augroup dotrc_filetype_settings
+  autocmd!
+  autocmd BufRead,BufNewFile *.txt setlocal spell spelllang=en_us formatoptions+=mM textwidth=80
+  autocmd BufRead,BufNewFile *.md setlocal spell spelllang=en_us formatoptions+=mM textwidth=80
+augroup END
 
 
-if has("win32")
-    set termguicolors
+if has('termguicolors')
+  set termguicolors
 endif
 
 
