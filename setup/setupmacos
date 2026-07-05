@@ -1,0 +1,32 @@
+#! /bin/bash
+set -euo pipefail
+
+# This script manages only macOS defaults that are safe to re-apply.
+# Editor-specific IME behavior should be handled separately in Vim/Neovim config.
+
+if [ "$(uname)" != "Darwin" ]; then
+  echo "setupmacos skipped: not macOS"
+  exit 0
+fi
+
+DOTRC_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+LOCAL_DEFAULTS_FILE="$DOTRC_DIR/local/etc/macos-defaults.local"
+
+# Values can be overridden per machine via local/etc/macos-defaults.local.
+MACOS_INITIAL_KEY_REPEAT="${MACOS_INITIAL_KEY_REPEAT:-10}"
+MACOS_KEY_REPEAT="${MACOS_KEY_REPEAT:-1}"
+MACOS_TRACKPAD_SCALING="${MACOS_TRACKPAD_SCALING:-31}"
+MACOS_PRESS_AND_HOLD_ENABLED="${MACOS_PRESS_AND_HOLD_ENABLED:-false}"
+
+if [ -f "$LOCAL_DEFAULTS_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$LOCAL_DEFAULTS_FILE"
+fi
+
+echo "Applying macOS keyboard and pointer defaults"
+/usr/bin/defaults write -g InitialKeyRepeat -int "$MACOS_INITIAL_KEY_REPEAT"
+/usr/bin/defaults write -g KeyRepeat -int "$MACOS_KEY_REPEAT"
+/usr/bin/defaults write -g com.apple.trackpad.scaling -float "$MACOS_TRACKPAD_SCALING"
+/usr/bin/defaults write -g ApplePressAndHoldEnabled -bool "$MACOS_PRESS_AND_HOLD_ENABLED"
+
+echo "macOS defaults applied"

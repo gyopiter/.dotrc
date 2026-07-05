@@ -1,0 +1,8 @@
+# Local macOS overrides for this machine.
+# Copy this file to local/etc/macos-defaults.local and customize as needed.
+
+# Example:
+# MACOS_INITIAL_KEY_REPEAT=10
+# MACOS_KEY_REPEAT=1
+# MACOS_TRACKPAD_SCALING=31
+# MACOS_PRESS_AND_HOLD_ENABLED=false

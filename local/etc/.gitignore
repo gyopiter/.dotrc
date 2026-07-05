@@ -1,3 +1,4 @@
 *
 !.gitignore
+!macos-defaults.local.example
 !shellrc.local.example
