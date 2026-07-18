@@ -1,18 +1,178 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
-set -e
+# Tmux setup
+# ===========
+#
+# Install TPM (Tmux Plugin Manager) and configure tmux to load this
+# repository's tmux.conf.
+#
+# Usage:
+#   bash setup/setuptmuxconf
+#
+# Options:
+#   -h, --help  Show this help message.
+#
+# Requirements:
+#   - git
+#
+# The script is safe to run repeatedly. It preserves configuration outside
+# the .dotrc marker block and upgrades an existing unmarked source line.
 
-mkdir -p "$HOME/.tmux/plugins"
+set -euo pipefail
 
-if [ -d "$HOME/.tmux/plugins/tpm" ]; then
-    echo "TPM already installed"
-else
-    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
-fi
+TMUX_INIT="$HOME/.tmux.conf"
+TMUX_SOURCE='source-file ~/.dotrc/tmux.conf'
+TMUX_BEGIN_MARKER='# >>> .dotrc tmux setup >>>'
+TMUX_END_MARKER='# <<< .dotrc tmux setup <<<'
 
-# Check if tmux.conf contains the line 'source-file ~/.dotrc/tmux.conf'
-if [ -f ~/.tmux.conf ] && grep -qF "source-file ~/.dotrc/tmux.conf" ~/.tmux.conf; then
-    echo "tmux.conf already sourced in ~/.tmux.conf"
-else
-    echo "source-file ~/.dotrc/tmux.conf" | tee -a ~/.tmux.conf
-fi
+usage() {
+    cat <<'EOF'
+Usage:
+  bash setup/setuptmuxconf
+
+Install TPM and configure tmux to load the repository configuration.
+EOF
+}
+
+require_command() {
+    local command_name="$1"
+
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        echo "Required command not found: $command_name" >&2
+        exit 1
+    fi
+}
+
+validate_tmux_block() {
+    local init_file="$1"
+
+    if [ -e "$init_file" ] && [ ! -f "$init_file" ]; then
+        echo "Cannot configure $init_file: it is not a regular file" >&2
+        exit 1
+    fi
+
+    [ -e "$init_file" ] || return 0
+
+    if ! awk -v begin="$TMUX_BEGIN_MARKER" -v end="$TMUX_END_MARKER" '
+        $0 == begin {
+            if (in_block || seen_begin) { malformed = 1 }
+            in_block = 1
+            seen_begin = 1
+            next
+        }
+        $0 == end {
+            if (!in_block || seen_end) { malformed = 1 }
+            in_block = 0
+            seen_end = 1
+            next
+        }
+        END {
+            if (in_block || seen_begin != seen_end || malformed) exit 1
+        }
+    ' "$init_file"; then
+        echo "Incomplete or malformed .dotrc tmux setup block in $init_file" >&2
+        echo "Repair the block manually, then run this script again." >&2
+        exit 1
+    fi
+}
+
+tmux_marker_block_exists() {
+    local init_file="$1"
+
+    awk -v begin="$TMUX_BEGIN_MARKER" -v end="$TMUX_END_MARKER" '
+        $0 == begin { in_block = 1; next }
+        in_block && $0 == end { found = 1; in_block = 0; next }
+        END { exit(found ? 0 : 1) }
+    ' "$init_file"
+}
+
+configure_tmux() {
+    local init_file="$1"
+    local tmp_init
+    local original_mode=""
+
+    validate_tmux_block "$init_file"
+
+    if [ -e "$init_file" ] && tmux_marker_block_exists "$init_file"; then
+        echo "tmux already configured in $init_file"
+        return 0
+    fi
+
+    if [ -f "$init_file" ]; then
+        if original_mode="$(stat -f '%Lp' "$init_file" 2>/dev/null)" || \
+            original_mode="$(stat -c '%a' "$init_file" 2>/dev/null)"; then
+            :
+        else
+            echo "Cannot determine permissions for $init_file" >&2
+            exit 1
+        fi
+    fi
+
+    touch "$init_file"
+
+    tmp_init="$(mktemp "${init_file}.tmp.XXXXXX")"
+    trap 'rm -f -- "$tmp_init"' RETURN
+
+    awk \
+        -v begin="$TMUX_BEGIN_MARKER" \
+        -v end="$TMUX_END_MARKER" \
+        -v source="$TMUX_SOURCE" '
+        $0 == begin { in_block = 1; next }
+        in_block && $0 == end { in_block = 0; next }
+        !in_block && $0 == source && !wrapped {
+            print begin
+            print source
+            print end
+            wrapped = 1
+            next
+        }
+        !in_block { print }
+        END {
+            if (!wrapped) {
+                if (NR > 0) { print "" }
+                print begin
+                print source
+                print end
+            }
+        }
+    ' "$init_file" > "$tmp_init"
+
+    if [ -n "$original_mode" ]; then
+        chmod "$original_mode" "$tmp_init"
+    fi
+    if [ -L "$init_file" ]; then
+        cp -- "$tmp_init" "$init_file"
+        rm -f -- "$tmp_init"
+    else
+        mv -f -- "$tmp_init" "$init_file"
+    fi
+    trap - RETURN
+    echo "Configured tmux in $init_file"
+}
+
+main() {
+    if [ "$#" -gt 0 ]; then
+        if [ "$#" -eq 1 ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
+            usage
+            return 0
+        fi
+        echo "This script does not accept positional arguments." >&2
+        usage >&2
+        return 1
+    fi
+
+    require_command git
+    validate_tmux_block "$TMUX_INIT"
+
+    mkdir -p "$HOME/.tmux/plugins"
+
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        echo "TPM already installed"
+    else
+        git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+    fi
+
+    configure_tmux "$TMUX_INIT"
+}
+
+main "$@"
