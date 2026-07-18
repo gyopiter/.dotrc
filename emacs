@@ -3,6 +3,38 @@
 (setq-default tab-width 4)          ; Set default indentation size to 4 spaces
 (setq-default cursor-type 'bar)     ; Use a vertical bar cursor
 
+;; Line endings
+;; Detect DOS/Mac line endings when reading, but use Unix (LF) line endings
+;; when saving.  Keep the file's character encoding while changing only the
+;; end-of-line convention, so non-UTF-8 files are not silently rewritten.
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8-unix)
+(set-default-coding-systems 'utf-8-unix)
+(defun dotrc-use-unix-line-endings ()
+  (when buffer-file-name
+    (let ((modified (buffer-modified-p))
+          (had-crlf nil))
+      ;; Emacs may leave CR characters in the buffer when LF and CRLF line
+      ;; endings are mixed.  Normalize only CRLF pairs; preserve lone CR
+      ;; characters because they may be intentional content.
+      (save-excursion
+        (goto-char (point-min))
+        (while (search-forward "\r\n" nil t)
+          (setq had-crlf t)
+          (replace-match "\n" nil nil)))
+      (when (coding-system-eol-type buffer-file-coding-system)
+        (set-buffer-file-coding-system
+         (coding-system-change-eol-conversion
+          (coding-system-base buffer-file-coding-system) 0)))
+      ;; A mixed-line-ending file was changed in the buffer and must be
+      ;; explicitly saved to persist the normalization.
+      (set-buffer-modified-p (or modified had-crlf)))))
+(add-hook 'find-file-hook #'dotrc-use-unix-line-endings)
+
+;; Lock files
+;; Do not create .#<file> lock files in directories being edited.
+(setq create-lockfiles nil)
+
 ;; Recovery files
 ;; Keep backup and auto-save files out of project directories while retaining
 ;; them for recovery after an accidental overwrite or Emacs crash.
