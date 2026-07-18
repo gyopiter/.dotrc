@@ -1,6 +1,49 @@
 #!/usr/bin/env bash
 
+# Emacs setup
+# ===========
+#
+# Configure Emacs to load the repository's emacs configuration from ~/.emacs.
+# The generated load form is wrapped in traceable marker comments.
+#
+# This script:
+#   1. Adds the repository's emacs configuration to ~/.emacs.
+#   2. Leaves existing user configuration outside its marker block in place.
+#   3. Detects an existing or incomplete .dotrc Emacs setup block.
+#
+# Usage:
+#   bash setup/setupemacs
+#
+# Options:
+#   -h, --help  Show this help message.
+#
+# Requirements:
+#   - Bash
+#
+# The script is safe to run repeatedly. It modifies ~/.emacs only when the
+# .dotrc Emacs setup block is not already present.
+
 set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  bash setup/setupemacs
+
+Load the repository's emacs configuration from ~/.emacs.
+EOF
+}
+
+if [ "$#" -gt 0 ]; then
+  if [ "$#" -eq 1 ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
+    usage
+    exit 0
+  fi
+
+  echo "Unexpected argument: $1" >&2
+  usage >&2
+  exit 1
+fi
 
 DOTRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 EMACS_CONFIG="$DOTRC_DIR/emacs"
@@ -18,14 +61,38 @@ if [ -e "$EMACS_INIT" ] && [ ! -f "$EMACS_INIT" ]; then
   exit 1
 fi
 
-if grep -qF "$BEGIN_MARKER" "$EMACS_INIT" 2>/dev/null; then
-  if grep -qF "$END_MARKER" "$EMACS_INIT"; then
+validate_setup_block() {
+  local init_file="$1"
+
+  awk -v begin="$BEGIN_MARKER" -v end="$END_MARKER" '
+    $0 == begin {
+      if (in_block || seen_begin) { malformed = 1 }
+      in_block = 1
+      seen_begin = 1
+      next
+    }
+    $0 == end {
+      if (!in_block || seen_end) { malformed = 1 }
+      in_block = 0
+      seen_end = 1
+      next
+    }
+    END {
+      if (in_block || !seen_begin || !seen_end || malformed) exit 1
+    }
+  ' "$init_file"
+}
+
+if [ -f "$EMACS_INIT" ] \
+  && { grep -qFx "$BEGIN_MARKER" "$EMACS_INIT" \
+    || grep -qFx "$END_MARKER" "$EMACS_INIT"; }; then
+  if validate_setup_block "$EMACS_INIT"; then
     echo "Emacs configuration already loaded in $EMACS_INIT"
     exit 0
   fi
 
-  echo "Incomplete .dotrc Emacs setup block in $EMACS_INIT" >&2
-  echo "Remove the incomplete block manually, then run this script again." >&2
+  echo "Incomplete or malformed .dotrc Emacs setup block in $EMACS_INIT" >&2
+  echo "Repair the block manually, then run this script again." >&2
   exit 1
 fi
 
