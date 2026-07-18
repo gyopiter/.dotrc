@@ -2,6 +2,7 @@
 (setq-default indent-tabs-mode nil) ; Use spaces instead of tabs
 (setq-default tab-width 4)          ; Set default indentation size to 4 spaces
 (setq-default cursor-type 'bar)     ; Use a vertical bar cursor
+(delete-selection-mode 1)            ; Replace the active region when inserting
 
 ;; Line endings
 ;; Detect DOS/Mac line endings when reading, but use Unix (LF) line endings
@@ -34,6 +35,13 @@
 ;; Lock files
 ;; Do not create .#<file> lock files in directories being edited.
 (setq create-lockfiles nil)
+
+;; Pasted text
+;; Normalize CRLF pairs in yanked text without changing the kill ring itself.
+;; Lone CR characters are preserved because they may be intentional content.
+(defun dotrc-normalize-yanked-line-endings (text)
+  (replace-regexp-in-string "\r\n" "\n" text))
+(add-hook 'yank-transform-functions #'dotrc-normalize-yanked-line-endings)
 
 ;; Recovery files
 ;; Keep backup and auto-save files out of project directories while retaining
