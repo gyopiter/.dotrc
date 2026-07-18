@@ -1,15 +1,148 @@
-#! /bin/bash
+#!/usr/bin/env bash
+
+# Shell setup
+# ===========
+#
+# Install fzf and the shell plugins used by this repository, then configure
+# Bash or Zsh to load ~/.dotrc/shellrc.
+#
+# Usage:
+#   bash setup/setupshellrc bash
+#   bash setup/setupshellrc zsh
+#
+# The script is safe to run repeatedly. It preserves configuration outside
+# the .dotrc marker block and upgrades an existing unmarked source line.
 
 set -euo pipefail
+
+SHELLRC_SOURCE='source ~/.dotrc/shellrc'
+BASHRC_INIT="$HOME/.bashrc"
+ZSHRC_INIT="$HOME/.zshrc"
+BASHRC_BEGIN_MARKER='# >>> .dotrc shellrc setup >>>'
+BASHRC_END_MARKER='# <<< .dotrc shellrc setup <<<'
+ZSHRC_BEGIN_MARKER='# >>> .dotrc shellrc setup >>>'
+ZSHRC_END_MARKER='# <<< .dotrc shellrc setup <<<'
 
 usage() {
   cat <<'EOF'
 Usage:
-  setup/setupshellrc bash
-  setup/setupshellrc zsh
+  bash setup/setupshellrc bash
+  bash setup/setupshellrc zsh
 
-Choose exactly one shell target.
+Install shell tools and configure exactly one shell target.
 EOF
+}
+
+validate_shellrc_block() {
+  local init_file="$1"
+  local begin_marker="$2"
+  local end_marker="$3"
+
+  if [ -L "$init_file" ]; then
+    echo "Cannot configure $init_file: symlinks are not supported" >&2
+    exit 1
+  fi
+
+  if [ -e "$init_file" ] && [ ! -f "$init_file" ]; then
+    echo "Cannot configure $init_file: it is not a regular file" >&2
+    exit 1
+  fi
+
+  [ -e "$init_file" ] || return 0
+
+  if ! awk -v begin="$begin_marker" -v end="$end_marker" '
+    $0 == begin {
+      if (in_block) { malformed = 1 }
+      in_block = 1
+      next
+    }
+    $0 == end {
+      if (!in_block) { malformed = 1 }
+      in_block = 0
+      next
+    }
+    END {
+      if (in_block) { malformed = 1 }
+      exit malformed
+    }
+  ' "$init_file"; then
+    echo "Incomplete or malformed .dotrc shellrc setup block in $init_file" >&2
+    echo "Repair the block manually, then run this script again." >&2
+    exit 1
+  fi
+}
+
+marker_block_exists() {
+  local init_file="$1"
+  local begin_marker="$2"
+  local end_marker="$3"
+
+  awk -v begin="$begin_marker" -v end="$end_marker" '
+    $0 == begin { in_block = 1; next }
+    in_block && $0 == end { found = 1; in_block = 0; next }
+    END { exit(found ? 0 : 1) }
+  ' "$init_file"
+}
+
+configure_shellrc() {
+  local init_file="$1"
+  local begin_marker="$2"
+  local end_marker="$3"
+  local tmp_init
+  local original_mode=""
+
+  validate_shellrc_block "$init_file" "$begin_marker" "$end_marker"
+
+  if [ -e "$init_file" ] && marker_block_exists "$init_file" "$begin_marker" "$end_marker"; then
+    echo "shellrc already configured in $init_file"
+    return 0
+  fi
+
+  if [ -f "$init_file" ]; then
+    if original_mode="$(stat -f '%Lp' "$init_file" 2>/dev/null)" || \
+      original_mode="$(stat -c '%a' "$init_file" 2>/dev/null)"; then
+      :
+    else
+      echo "Cannot determine permissions for $init_file" >&2
+      exit 1
+    fi
+  fi
+
+  touch "$init_file"
+
+  tmp_init="$(mktemp "${init_file}.tmp.XXXXXX")"
+  trap 'rm -f -- "$tmp_init"' RETURN
+
+  awk \
+    -v begin="$begin_marker" \
+    -v end="$end_marker" \
+    -v source="$SHELLRC_SOURCE" '
+    $0 == begin { in_block = 1; next }
+    in_block && $0 == end { in_block = 0; next }
+    !in_block && $0 == source && !wrapped {
+      print begin
+      print source
+      print end
+      wrapped = 1
+      next
+    }
+    !in_block { print }
+    END {
+      if (!wrapped) {
+        if (NR > 0) { print "" }
+        print begin
+        print source
+        print end
+      }
+    }
+  ' "$init_file" > "$tmp_init"
+
+  if [ -n "$original_mode" ]; then
+    chmod "$original_mode" "$tmp_init"
+  fi
+  mv -f -- "$tmp_init" "$init_file"
+  trap - RETURN
+  echo "Configured shellrc in $init_file"
 }
 
 install_fzf() {
@@ -64,11 +197,7 @@ install_ohmyzsh() {
     fi
   fi
 
-  if [ -f ~/.zshrc ] && grep -qF "source ~/.dotrc/shellrc" ~/.zshrc; then
-    echo "shellrc already sourced in ~/.zshrc"
-  else
-    echo "source ~/.dotrc/shellrc" | tee -a ~/.zshrc
-  fi
+  configure_shellrc "$ZSHRC_INIT" "$ZSHRC_BEGIN_MARKER" "$ZSHRC_END_MARKER"
 }
 
 install_ohmybash() {
@@ -78,11 +207,7 @@ install_ohmybash() {
     bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
   fi
 
-  if [ -f ~/.bashrc ] && grep -qF "source ~/.dotrc/shellrc" ~/.bashrc; then
-    echo "shellrc already sourced in ~/.bashrc"
-  else
-    echo "source ~/.dotrc/shellrc" | tee -a ~/.bashrc
-  fi
+  configure_shellrc "$BASHRC_INIT" "$BASHRC_BEGIN_MARKER" "$BASHRC_END_MARKER"
 }
 
 main() {
@@ -98,10 +223,12 @@ main() {
 
   case "$1" in
     bash)
+      validate_shellrc_block "$BASHRC_INIT" "$BASHRC_BEGIN_MARKER" "$BASHRC_END_MARKER"
       install_fzf
       install_ohmybash
       ;;
     zsh)
+      validate_shellrc_block "$ZSHRC_INIT" "$ZSHRC_BEGIN_MARKER" "$ZSHRC_END_MARKER"
       install_fzf
       install_ohmyzsh
       ;;
