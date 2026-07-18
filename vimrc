@@ -109,6 +109,26 @@ set showbreak=↪
 set virtualedit=onemore
 set whichwrap=b,s,h,l,<,>,[,]
 
+" Cursor shape for terminal Vim: use a steady vertical bar in all modes.
+if !has('gui_running')
+  function! s:dotrc_set_cursor_shape(sequence) abort
+    let &t_SI = a:sequence
+    let &t_SR = a:sequence
+    let &t_EI = a:sequence
+    execute "normal! i\<Esc>"
+  endfunction
+
+  let &t_SI = "\<Esc>[6 q"
+  let &t_SR = "\<Esc>[6 q"
+  let &t_EI = "\<Esc>[6 q"
+
+  augroup dotrc_cursor_shape
+    autocmd!
+    autocmd VimEnter * call <SID>dotrc_set_cursor_shape("\<Esc>[6 q")
+    autocmd VimLeave * call <SID>dotrc_set_cursor_shape("\<Esc>[2 q")
+  augroup END
+endif
+
 " IME configuration
 " Apple IME itself is controlled by the OS. Keep Vim's own IME state reset
 " when leaving insert or command-line mode so normal-mode mappings stay usable.

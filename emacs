@@ -1,6 +1,7 @@
 ;; Editing
 (setq-default indent-tabs-mode nil) ; Use spaces instead of tabs
 (setq-default tab-width 4)          ; Set default indentation size to 4 spaces
+(setq-default cursor-type 'bar)     ; Use a vertical bar cursor
 
 ;; Recovery files
 ;; Keep backup and auto-save files out of project directories while retaining
