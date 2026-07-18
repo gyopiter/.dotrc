@@ -22,6 +22,32 @@
 (setq-default display-fill-column-indicator-column 80)
 (global-display-fill-column-indicator-mode 1)
 
+;; Open files received by emacsclient in a new tab after the first request.
+;; This keeps the initial tab intact while preventing subsequent external file
+;; opens from replacing the current buffer.
+(defvar dotrc-server-has-visited-file nil)
+(defun dotrc-visit-in-new-tab (&optional force)
+  (let ((buffer (current-buffer)))
+    (when (or force dotrc-server-has-visited-file)
+      (tab-bar-new-tab))
+    (switch-to-buffer buffer)
+    (setq dotrc-server-has-visited-file t)))
+(with-eval-after-load 'server
+  (add-hook 'server-visit-hook #'dotrc-visit-in-new-tab))
+
+;; Handle files opened through macOS's "Open With" Apple Event as well.
+(defun dotrc-ns-find-file-in-new-tab (orig-fun &rest args)
+  (let* ((existing-file-buffer (buffer-file-name))
+         ;; Keep macOS file opens in the current frame; the helper below
+         ;; creates a tab when an existing file buffer is already displayed.
+         (ns-pop-up-frames nil)
+         (result (apply orig-fun args)))
+    (when (buffer-file-name)
+      (dotrc-visit-in-new-tab existing-file-buffer))
+    result))
+(with-eval-after-load 'ns-win
+  (advice-add 'ns-find-file :around #'dotrc-ns-find-file-in-new-tab))
+
 ;; Font
 (set-face-attribute 'default nil :family "HackGen Console NF" :height 120)
 (dolist (target '(japanese-jisx0208 japanese-jisx0212
