@@ -1,23 +1,136 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
-set -e
+# Vim setup
+# =========
+#
+# Configure Vim and/or Neovim to load the repository's vimrc and manage
+# plugins with vim-plug.
+#
+# This script:
+#   1. Adds the repository's vimrc to ~/.vimrc and/or
+#      ~/.config/nvim/init.vim with traceable marker blocks.
+#   2. Installs vim-plug for each available editor when it is not already
+#      installed.
+#   3. Installs configured plugins with :PlugInstall in each available editor.
+#
+# Usage:
+#   bash setup/setupvimrc
+#
+# Requirements:
+#   - curl
+#   - git
+#   - Vim and/or Neovim
+#
+# The script is safe to run repeatedly. Existing user configuration is left
+# in place outside the script's marker blocks.
 
-# Import the vimrc
-if [ -f ~/.vimrc ] && grep -qF "source ~/.dotrc/vimrc" ~/.vimrc; then
-    echo "vimrc already sourced in ~/.vimrc"
-else
-    echo "source ~/.dotrc/vimrc" | tee -a ~/.vimrc
+set -euo pipefail
+
+DOTRC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+VIM_CONFIG="$DOTRC_DIR/vimrc"
+VIM_INIT="$HOME/.vimrc"
+NVIM_INIT="${XDG_CONFIG_HOME:-$HOME/.config}/nvim/init.vim"
+VIM_PLUG_VIM="$HOME/.vim/autoload/plug.vim"
+NVIM_PLUG_VIM="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/autoload/plug.vim"
+PLUG_VIM_URL="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+SOURCE_LINE='source ~/.dotrc/vimrc'
+VIM_BEGIN_MARKER='" >>> .dotrc Vim setup >>>'
+VIM_END_MARKER='" <<< .dotrc Vim setup <<<'
+NVIM_BEGIN_MARKER='" >>> .dotrc Neovim setup >>>'
+NVIM_END_MARKER='" <<< .dotrc Neovim setup <<<'
+
+if [ ! -f "$VIM_CONFIG" ]; then
+    echo "Vim configuration not found: $VIM_CONFIG" >&2
+    exit 1
 fi
 
-# Install Vundle
-mkdir -p "$HOME/.vim/bundle"
+for command in curl git; do
+    if ! command -v "$command" >/dev/null 2>&1; then
+        echo "Required command not found: $command" >&2
+        exit 1
+    fi
+done
 
-if [ -d "$HOME/.vim/bundle/Vundle.vim" ]; then
-    echo "Vundle already installed"
-else
-    git clone https://github.com/VundleVim/Vundle.vim.git "$HOME/.vim/bundle/Vundle.vim"
+configure_init() {
+    local init_file="$1"
+    local begin_marker="$2"
+    local end_marker="$3"
+
+    if [ -e "$init_file" ] && [ ! -f "$init_file" ]; then
+        echo "Cannot configure $init_file: it is not a regular file" >&2
+        exit 1
+    fi
+
+    mkdir -p "$(dirname "$init_file")"
+
+    # Import the vimrc and leave a traceable marker block.
+    if grep -qF "$begin_marker" "$init_file" 2>/dev/null; then
+        if grep -qF "$end_marker" "$init_file"; then
+            echo "Vim configuration already loaded in $init_file"
+        else
+            echo "Incomplete .dotrc setup block in $init_file" >&2
+            echo "Remove the incomplete block manually, then run this script again." >&2
+            exit 1
+        fi
+    elif grep -qxF "$SOURCE_LINE" "$init_file" 2>/dev/null; then
+        # Upgrade the unmarked source line created by the previous setup script.
+        local tmp_init
+        tmp_init="$(mktemp)"
+        trap 'rm -f "$tmp_init"' RETURN
+        awk -v begin="$begin_marker" -v end="$end_marker" -v source="$SOURCE_LINE" '
+            !wrapped && $0 == source {
+                print begin
+                print
+                print end
+                wrapped = 1
+                next
+            }
+            { print }
+            END {
+                if (!wrapped) exit 1
+            }
+        ' "$init_file" > "$tmp_init"
+        cp "$tmp_init" "$init_file"
+        rm -f "$tmp_init"
+        trap - RETURN
+        echo "Marked existing Vim configuration in $init_file"
+    else
+        printf '\n%s\n%s\n%s\n' \
+            "$begin_marker" "$SOURCE_LINE" "$end_marker" >> "$init_file"
+        echo "Loaded $VIM_CONFIG from $init_file"
+    fi
+}
+
+install_plug() {
+    local plug_vim="$1"
+
+    # Install vim-plug without replacing an existing installation.
+    if [ -f "$plug_vim" ]; then
+        echo "vim-plug already installed at $plug_vim"
+    else
+        mkdir -p "$(dirname "$plug_vim")"
+        curl -fLo "$plug_vim" --create-dirs "$PLUG_VIM_URL"
+        echo "Installed vim-plug at $plug_vim"
+    fi
+}
+
+vim_available=0
+if command -v vim >/dev/null 2>&1; then
+    vim_available=1
+    configure_init "$VIM_INIT" "$VIM_BEGIN_MARKER" "$VIM_END_MARKER"
+    install_plug "$VIM_PLUG_VIM"
+    vim +PlugInstall +qall
 fi
 
-if [ -d "$HOME/.vim/bundle/Vundle.vim" ]; then
-    vim +PluginInstall +qall
+nvim_available=0
+if command -v nvim >/dev/null 2>&1; then
+    nvim_available=1
+    configure_init "$NVIM_INIT" "$NVIM_BEGIN_MARKER" "$NVIM_END_MARKER"
+    install_plug "$NVIM_PLUG_VIM"
+    nvim --headless +PlugInstall +qa
+fi
+
+if [ "$vim_available" -eq 0 ] && [ "$nvim_available" -eq 0 ]; then
+    echo "Required editor not found: install Vim or Neovim" >&2
+    exit 1
 fi
