@@ -1,0 +1,262 @@
+#!/usr/bin/env bash
+
+# Mamba setup
+# ===========
+#
+# Install micromamba and initialize bash or zsh with base environment
+# auto-activation. Optionally install Python 3.12 and uv in the base
+# environment, including uv shell completion and uv tool PATH setup.
+#
+# This script:
+#   1. Installs micromamba using the official installer when necessary.
+#   2. Uses ~/micromamba as the default root prefix.
+#   3. Adds or updates micromamba's shell initialization block.
+#   4. Enables automatic activation of the base environment.
+#   5. Optionally installs Python 3.12, pip, and uv in the base environment.
+#   6. Configures uv and uvx shell completion and uv tool executables.
+#
+# Usage:
+#   bash setup/setupmamba bash
+#   bash setup/setupmamba zsh
+#
+# Requirements:
+#   - curl
+#   - bash or zsh
+#
+# The script is safe to run repeatedly. It may modify the target shell's
+# initialization file and create ~/micromamba.
+#
+# Reference:
+#   https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html
+#   https://docs.astral.sh/uv/getting-started/installation/
+
+set -euo pipefail
+
+export MAMBA_ROOT_PREFIX="$HOME/micromamba"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  setup/setupmamba bash
+  setup/setupmamba zsh
+
+Install micromamba and initialize exactly one target shell.
+EOF
+}
+
+require_command() {
+  local command_name="$1"
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "Required command not found: $command_name" >&2
+    exit 1
+  fi
+}
+
+install_micromamba() {
+  local shell_command="$1"
+  local micromamba_bin
+
+  if micromamba_bin="$(command -v micromamba 2>/dev/null)"; then
+    printf '%s\n' "$micromamba_bin"
+    return
+  fi
+
+  echo "Installing micromamba with the official installer" >&2
+  SHELL="$shell_command" "$shell_command" <(curl -fsSL https://micro.mamba.pm) >&2
+
+  export PATH="$HOME/.local/bin:$HOME/micromamba-bin:$PATH"
+
+  if micromamba_bin="$(command -v micromamba 2>/dev/null)"; then
+    printf '%s\n' "$micromamba_bin"
+    return
+  fi
+
+  echo "micromamba was installed, but its executable could not be found" >&2
+  echo "Check the installer output and your PATH, then run this script again." >&2
+  exit 1
+}
+
+configure_shell_block() {
+  local init_file="$1"
+  local begin_marker="$2"
+  local end_marker="$3"
+  local block_content="$4"
+  local tmp_init
+
+  if [ -e "$init_file" ] && [ ! -f "$init_file" ]; then
+    echo "Cannot configure $init_file: it is not a regular file" >&2
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "$init_file")"
+  touch "$init_file"
+
+  if ! awk -v begin="$begin_marker" -v end="$end_marker" '
+    $0 == begin {
+      if (in_block) { malformed = 1 }
+      in_block = 1
+      next
+    }
+    $0 == end {
+      if (!in_block) { malformed = 1 }
+      in_block = 0
+      next
+    }
+    END {
+      if (in_block) { malformed = 1 }
+      exit malformed
+    }
+  ' "$init_file"; then
+    echo "Incomplete or malformed .dotrc setup block in $init_file" >&2
+    echo "Repair the block manually, then run this script again." >&2
+    exit 1
+  fi
+
+  tmp_init="$(mktemp "${init_file}.tmp.XXXXXX")"
+  trap 'rm -f -- "$tmp_init"' RETURN
+
+  awk -v begin="$begin_marker" -v end="$end_marker" '
+    $0 == begin { in_block = 1; next }
+    in_block && $0 == end { in_block = 0; next }
+    !in_block { print }
+  ' "$init_file" > "$tmp_init"
+
+  if [ -s "$tmp_init" ]; then
+    printf '\n' >> "$tmp_init"
+  fi
+  printf '%s\n%s\n%s\n' \
+    "$begin_marker" "$block_content" "$end_marker" >> "$tmp_init"
+
+  mv -f -- "$tmp_init" "$init_file"
+  trap - RETURN
+}
+
+setup_micromamba() {
+  local shell_target="$1"
+  local micromamba_bin="$2"
+
+  "$micromamba_bin" shell init \
+    --shell "$shell_target" \
+    --root-prefix "$MAMBA_ROOT_PREFIX"
+  "$micromamba_bin" config set auto_activate_base true
+
+  echo "micromamba initialized for $shell_target"
+  echo "The base environment will be activated in new $shell_target sessions."
+}
+
+setup_uv() {
+  local shell_target="$1"
+  local shell_command="$2"
+  local micromamba_bin="$3"
+  local init_file
+  local uv_completion_block
+  local uvx_completion_block
+
+  echo "Installing Python 3.12 and pip in the micromamba base environment"
+  "$micromamba_bin" install \
+    --root-prefix "$MAMBA_ROOT_PREFIX" \
+    --name base \
+    python=3.12 pip \
+    --yes
+
+  echo "Installing uv with pip"
+  "$micromamba_bin" run \
+    --root-prefix "$MAMBA_ROOT_PREFIX" \
+    --name base \
+    python -m pip install uv
+
+  case "$shell_target" in
+    bash)
+      init_file="$HOME/.bashrc"
+      ;;
+    zsh)
+      init_file="$HOME/.zshrc"
+      ;;
+  esac
+
+  printf -v uv_completion_block \
+    'eval "$(uv generate-shell-completion %s)"' \
+    "$shell_target"
+  printf -v uvx_completion_block \
+    'eval "$(uvx --generate-shell-completion %s)"' \
+    "$shell_target"
+
+  configure_shell_block \
+    "$init_file" \
+    '# >>> .dotrc uv completion >>>' \
+    '# <<< .dotrc uv completion <<<' \
+    "$uv_completion_block"
+  configure_shell_block \
+    "$init_file" \
+    '# >>> .dotrc uvx completion >>>' \
+    '# <<< .dotrc uvx completion <<<' \
+    "$uvx_completion_block"
+
+  echo "Configuring uv tool executables for $shell_target"
+  SHELL="$shell_command" "$micromamba_bin" run \
+    --root-prefix "$MAMBA_ROOT_PREFIX" \
+    --name base \
+    uv tool update-shell
+
+  echo "Python 3.12, uv, and uv completion configured for $shell_target"
+}
+
+main() {
+  local shell_target="$1"
+  local shell_command
+  local micromamba_bin
+  local install_uv=0
+  local answer
+
+  case "$shell_target" in
+    bash)
+      shell_command="$(command -v bash)"
+      ;;
+    zsh)
+      shell_command="$(command -v zsh)"
+      ;;
+    -h|--help)
+      usage
+      return 0
+      ;;
+    *)
+      echo "Unknown shell target: $shell_target" >&2
+      usage >&2
+      return 1
+      ;;
+  esac
+
+  require_command curl
+  micromamba_bin="$(install_micromamba "$shell_command")"
+  export PATH="$(dirname "$micromamba_bin"):$PATH"
+
+  setup_micromamba "$shell_target" "$micromamba_bin"
+
+  if [ -t 0 ] && [ -t 1 ]; then
+    read -r -p "Install Python 3.12 and uv as well? [y/N] " answer
+    case "$answer" in
+      y|Y|yes|YES|Yes)
+        install_uv=1
+        ;;
+    esac
+  fi
+
+  if [ "$install_uv" -eq 1 ]; then
+    setup_uv "$shell_target" "$shell_command" "$micromamba_bin"
+  else
+    echo "Skipped Python 3.12 and uv setup"
+  fi
+}
+
+if [ "$#" -ne 1 ]; then
+  if [ "$#" -eq 0 ]; then
+    echo "Missing shell target." >&2
+  else
+    echo "Expected exactly one shell target." >&2
+  fi
+  usage >&2
+  exit 1
+fi
+
+main "$1"
