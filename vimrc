@@ -78,12 +78,25 @@ nnoremap <Up>   gk
 nnoremap j gj
 nnoremap k gk
 
-" Minimal Control-key bindings for insert mode and cursor navigation
+" Minimal Control-key bindings for insert mode, cursor navigation, yank/paste, and undo
 nnoremap <C-i> i
 nnoremap <C-h> h
 nnoremap <C-j> gj
 nnoremap <C-k> gk
 nnoremap <C-l> l
+nnoremap <C-y> yy
+nnoremap <C-p> p
+nnoremap <C-/> u
+nnoremap <C-_> u
+
+xnoremap <C-h> h
+xnoremap <C-j> gj
+xnoremap <C-k> gk
+xnoremap <C-l> l
+xnoremap <C-y> y
+xnoremap <C-p> p
+xnoremap <C-/> :undo<CR>
+xnoremap <C-_> :undo<CR>
 
 inoremap <C-j> <C-o>gj
 inoremap <C-k> <C-o>gk
@@ -93,7 +106,7 @@ inoremap <C-l> <Right>
 vnoremap j gj
 vnoremap k gk
 
-nnoremap <silent><C-k>e :NERDTreeToggle<CR>
+nnoremap <silent><Leader>e :NERDTreeToggle<CR>
 
 set background=dark
 set backspace=indent,eol,start
