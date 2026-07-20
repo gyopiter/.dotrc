@@ -59,6 +59,16 @@
 (global-display-line-numbers-mode 1)
 (global-hl-line-mode 1)             ; Highlight the current line
 (tab-bar-mode 1)
+
+;; Create an unnamed, unsaved buffer when opening a new tab.
+;; The timestamp is used as the buffer name only; it is not a file path.
+(defun dotrc-new-untitled-buffer ()
+  (let ((name (format "Untitled-%s"
+                      (format-time-string "%Y%m%d-%H%M%S"))))
+    (switch-to-buffer (generate-new-buffer name))
+    (text-mode)))
+(setq tab-bar-new-tab-choice #'dotrc-new-untitled-buffer)
+
 (setq-default display-fill-column-indicator-column 80)
 (global-display-fill-column-indicator-mode 1)
 
