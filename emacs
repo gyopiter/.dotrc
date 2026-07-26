@@ -4,6 +4,11 @@
 (setq-default cursor-type 'bar)     ; Use a vertical bar cursor
 (delete-selection-mode 1)            ; Replace the active region when inserting
 
+;; Navigation
+;; On macOS, the Command key is represented by `s-' in Emacs key descriptions.
+(global-set-key (kbd "s-<up>") #'beginning-of-buffer)
+(global-set-key (kbd "s-<down>") #'end-of-buffer)
+
 ;; Allow commands to use the mark even if it becomes temporarily inactive.
 ;; The mwheel advice below keeps the region active during mouse-wheel scrolling.
 (setq mark-even-if-inactive t)
