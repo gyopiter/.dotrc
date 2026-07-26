@@ -81,6 +81,18 @@
 (global-hl-line-mode 1)             ; Highlight the current line
 (tab-bar-mode 1)
 
+;; Close the buffer shown in the current tab when closing the tab.
+;; This intentionally follows the selected window; a buffer shared by
+;; multiple tabs will therefore be killed from all of them.
+(defun dotrc-tab-bar-close-tab-and-kill-buffer (&optional force)
+  (interactive "P")
+  (let ((buffer (window-buffer (selected-window))))
+    (tab-bar-close-tab force)
+    (when (buffer-live-p buffer)
+      (kill-buffer buffer))))
+(define-key tab-bar-map (kbd "C-w")
+            #'dotrc-tab-bar-close-tab-and-kill-buffer)
+
 ;; Create an unnamed, unsaved buffer when opening a new tab.
 ;; The timestamp is used as the buffer name only; it is not a file path.
 (defun dotrc-new-untitled-buffer ()
