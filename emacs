@@ -22,9 +22,19 @@
 ;; active region afterward so forced scrolling at a window boundary does not
 ;; make an existing selection disappear.
 (defun dotrc-mwheel-scroll-preserve-region (orig-fun &rest args)
-  (let ((buffer (current-buffer))
-        (saved-mark (mark t))
-        (was-active mark-active))
+  (let* ((event (car args))
+         ;; mwheel-scroll may scroll a non-selected window under the mouse.
+         ;; Preserve the mark from that actual target buffer, not merely from
+         ;; the buffer that was selected when the command was invoked.
+         (scroll-window
+          (let ((candidate
+                 (and (fboundp 'mouse-wheel--get-scroll-window)
+                      (mouse-wheel--get-scroll-window event))))
+            (and (window-live-p candidate) candidate)))
+         (buffer (or (and scroll-window (window-buffer scroll-window))
+                     (current-buffer)))
+         (saved-mark (with-current-buffer buffer (mark t)))
+         (was-active (with-current-buffer buffer mark-active)))
     (unwind-protect
         (apply orig-fun args)
       (when (and was-active saved-mark (buffer-live-p buffer))
@@ -121,13 +131,14 @@
           (catch 'found
             (dotimes (index (length tabs))
               (tab-bar-select-tab (1+ index))
-              (when (get-buffer-window buffer frame)
-                (throw 'found (1+ index))))
+              (let ((buffer-window (get-buffer-window buffer frame)))
+                (when buffer-window
+                  (throw 'found (cons (1+ index) buffer-window)))))
             nil)))
     (if found-tab
         (progn
-          (tab-bar-select-tab found-tab)
-          (switch-to-buffer buffer)
+          (tab-bar-select-tab (car found-tab))
+          (select-window (cdr found-tab))
           t)
       (tab-bar-select-tab current-tab)
       (let ((visible-window (get-buffer-window buffer 'visible)))
@@ -161,7 +172,7 @@
 (with-eval-after-load 'server
   ;; Remove the previous implementation when reloading this file in a running
   ;; Emacs session.
-  (advice-remove 'server-visit-files #'dotrc-server-visit-files-in-tab)
+  (advice-remove 'server-visit-files 'dotrc-server-visit-files-in-tab)
   (add-hook 'server-visit-hook #'dotrc-visit-in-new-tab))
 
 ;; Handle files opened through macOS's "Open With" Apple Event as well.
