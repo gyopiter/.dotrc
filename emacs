@@ -108,6 +108,20 @@
 (define-key tab-bar-map (kbd "C-w")
             #'dotrc-tab-bar-close-tab-and-kill-buffer)
 
+;; Use the same behavior when the close button on a tab is clicked.
+;; Select the clicked tab first so the buffer belongs to the tab being closed,
+;; including when the close button is on an inactive tab.
+(defun dotrc-tab-bar-mouse-1 (event)
+  (interactive "e")
+  (let* ((item (tab-bar--event-to-item (event-start event)))
+         (tab-number (tab-bar--key-to-number (nth 0 item))))
+    (if (and (nth 2 item) (not (eq tab-number t)))
+        (progn
+          (tab-bar-select-tab tab-number)
+          (dotrc-tab-bar-close-tab-and-kill-buffer))
+      (tab-bar-mouse-1 event))))
+(define-key tab-bar-map (kbd "<mouse-1>") #'dotrc-tab-bar-mouse-1)
+
 ;; Create an unnamed, unsaved buffer when opening a new tab.
 ;; The timestamp is used as the buffer name only; it is not a file path.
 (defun dotrc-new-untitled-buffer ()
