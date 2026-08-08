@@ -122,23 +122,25 @@ set showbreak=↪
 set virtualedit=onemore
 set whichwrap=b,s,h,l,<,>,[,]
 
-" Cursor shape for terminal Vim: use a steady vertical bar in all modes.
+" Cursor shape for terminal Vim: distinguish the insertion point from the
+" normal-mode character under the cursor.
 if !has('gui_running')
-  function! s:dotrc_set_cursor_shape(sequence) abort
-    let &t_SI = a:sequence
-    let &t_SR = a:sequence
-    let &t_EI = a:sequence
+  function! s:dotrc_set_cursor_shape(insert_sequence, replace_sequence, normal_sequence) abort
+    let &t_SI = a:insert_sequence
+    let &t_SR = a:replace_sequence
+    let &t_EI = a:normal_sequence
     execute "normal! i\<Esc>"
   endfunction
 
+  " Insert: steady vertical bar; replace: steady underline; normal: steady block.
   let &t_SI = "\<Esc>[6 q"
-  let &t_SR = "\<Esc>[6 q"
-  let &t_EI = "\<Esc>[6 q"
+  let &t_SR = "\<Esc>[4 q"
+  let &t_EI = "\<Esc>[2 q"
 
   augroup dotrc_cursor_shape
     autocmd!
-    autocmd VimEnter * call <SID>dotrc_set_cursor_shape("\<Esc>[6 q")
-    autocmd VimLeave * call <SID>dotrc_set_cursor_shape("\<Esc>[2 q")
+    autocmd VimEnter * call <SID>dotrc_set_cursor_shape("\<Esc>[6 q", "\<Esc>[4 q", "\<Esc>[2 q")
+    autocmd VimLeave * call <SID>dotrc_set_cursor_shape("\<Esc>[6 q", "\<Esc>[4 q", "\<Esc>[2 q")
   augroup END
 endif
 
