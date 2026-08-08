@@ -15,7 +15,7 @@
 
 ;; Let the cursor move naturally with the buffer while scrolling.  The
 ;; mwheel advice below preserves the active region separately.
-(setq scroll-preserve-screen-position nil)
+(setq scroll-preserve-screen-position 'always)
 (setq scroll-error-top-bottom nil)
 
 ;; mwheel-scroll deactivates mark when scrolling moves point.  Restore the
