@@ -24,7 +24,6 @@ Plug 'vim-scripts/vim-auto-save'
 Plug 'hrsh7th/vim-vsnip'
 Plug 'hrsh7th/vim-vsnip-integ'
 Plug 'godlygeek/tabular'
-Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
